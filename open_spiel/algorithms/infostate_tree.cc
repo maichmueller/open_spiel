@@ -485,7 +485,8 @@ absl::optional<DecisionId> InfostateTree::DecisionIdForSequence(
   }
 }
 absl::optional<InfostateNode*> InfostateTree::DecisionForSequence(
-    const SequenceId& sequence_id) {
+    const SequenceId& sequence_id) const
+{
   SPIEL_DCHECK_TRUE(sequence_id.BelongsToTree(this));
   InfostateNode* node = sequences_.at(sequence_id.id());
   SPIEL_DCHECK_TRUE(node);
