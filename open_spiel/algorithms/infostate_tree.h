@@ -237,6 +237,9 @@ class RangeIterator {
    bool operator!=(const RangeIterator& other) const {
       return id_ != other.id_ || tree_ != other.tree_;
    }
+   bool operator==(const RangeIterator& other) const {
+      return not this->operator!=(other);
+   }
    Id operator*() { return Id(id_, tree_); }
 };
 template <class Id>
