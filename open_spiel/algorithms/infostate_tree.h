@@ -128,7 +128,7 @@ class NodeId {
 #ifndef NDEBUG  // Allow additional automatic debug-time checks.
   const InfostateTree* tree_ = nullptr;
 
-public:
+ public:
   NodeId(size_t id_value, const InfostateTree* tree_ptr)
       : identifier_(id_value), tree_(tree_ptr) {}
   NodeId& operator=(Self&& rhs) {
@@ -153,7 +153,7 @@ public:
   }
 #else
 
-public:
+ public:
   // Do not save the tree pointer, but expose the same interface
   // so it's easy to use.
   NodeId(size_t id_value, const InfostateTree*) : identifier_(id_value) {}
@@ -228,7 +228,7 @@ class RangeIterator {
   size_t id_;
   const InfostateTree* tree_;
 
-public:
+ public:
   RangeIterator(size_t id, const InfostateTree* tree) : id_(id), tree_(tree) {}
   RangeIterator& operator++() {
     ++id_;
