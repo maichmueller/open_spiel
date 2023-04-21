@@ -29,6 +29,7 @@
 #include "open_spiel/observer.h"
 #include "open_spiel/python/pybind11/algorithms_corr_dist.h"
 #include "open_spiel/python/pybind11/algorithms_trajectories.h"
+#include "open_spiel/python/pybind11/algorithms_infostate_tree.h"
 #include "open_spiel/python/pybind11/bots.h"
 #include "open_spiel/python/pybind11/game_transforms.h"
 #include "open_spiel/python/pybind11/games_backgammon.h"
@@ -56,7 +57,6 @@
 #include "open_spiel/tests/basic_tests.h"
 
 // Includes needed for absl::optional.
-#include "algorithms_infostate_tree.h"
 #include "pybind11/include/pybind11/detail/common.h"
 #include "pybind11_abseil/absl_casters.h"
 
