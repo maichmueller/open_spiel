@@ -248,7 +248,7 @@ class Range {
   const size_t end_;
   const InfostateTree* tree_;
 
-public:
+ public:
   Range(size_t start, size_t end, const InfostateTree* tree)
       : start_(start), end_(end), tree_(tree) {
     SPIEL_CHECK_LE(start_, end_);
@@ -293,7 +293,7 @@ class InfostateTree final {
   // to ensure the trees are always allocated on heap. We do this so that all
   // the collected pointers are valid throughout the tree's lifetime even if
   // they are moved around.
-private:
+ private:
   InfostateTree(const std::vector<const State*>& start_states,
                 const std::vector<double>& chance_reach_probs,
                 std::shared_ptr<Observer> infostate_observer,
@@ -307,7 +307,7 @@ private:
   friend std::shared_ptr<InfostateTree> MakeInfostateTree(
       const std::vector<const InfostateNode*>&, int);
 
-public:
+ public:
   // -- Root accessors ---------------------------------------------------------
   const InfostateNode& root() const { return *root_; }
   InfostateNode* mutable_root() { return root_.get(); }
@@ -396,7 +396,7 @@ public:
   // -- For debugging ----------------------------------------------------------
   friend std::ostream& operator<<(std::ostream& os, const InfostateTree& tree);
 
-private:
+ private:
   const Player acting_player_;
   const std::shared_ptr<Observer> infostate_observer_;
   const std::unique_ptr<InfostateNode> root_;
@@ -451,7 +451,7 @@ class VecWithUniquePtrsIterator {
   int pos_;
   const std::vector<std::unique_ptr<T>>& vec_;
 
-public:
+ public:
   explicit VecWithUniquePtrsIterator(const std::vector<std::unique_ptr<T>>& vec,
                                      int pos = 0)
       : pos_(pos), vec_(vec) {}
@@ -476,7 +476,7 @@ class InfostateNode final {
   // Note that all of the following members are const or they should be const.
   // However we can't make all of  them const during the node construction
   // because they might be computed only after the whole tree is built.
-private:
+ private:
   // Reference to the tree this node belongs to. This reference has a valid
   // lifetime, as it is allocated once on the heap and never moved.
   const InfostateTree& tree_;
@@ -545,7 +545,7 @@ private:
                 std::vector<Action> terminal_history);
   friend class InfostateTree;
 
-public:
+ public:
   // -- Node accessors. --------------------------------------------------------
   const InfostateTree& tree() const { return tree_; }
   InfostateNode* parent() const { return parent_; }
@@ -631,7 +631,7 @@ public:
   // of (isomorphic) trees.
   std::string MakeCertificate() const;
 
-private:
+ private:
   // Make sure that the subtree ends at the requested target depth by inserting
   // dummy observation nodes with one outcome.
   void RebalanceSubtree(int target_depth, int current_depth);
@@ -663,7 +663,7 @@ class TreeVector {
   const InfostateTree* tree_;
   std::vector<T> vec_;
 
-public:
+ public:
   explicit TreeVector(const InfostateTree* tree)
       : tree_(tree), vec_(tree_->num_ids(Id(kUndefinedNodeId, tree))) {}
   TreeVector(const InfostateTree* tree, std::vector<T> vec)
