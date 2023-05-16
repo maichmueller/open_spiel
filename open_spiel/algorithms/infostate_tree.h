@@ -557,6 +557,7 @@ class InfostateNode final {
   const InfostateNodeType& type() const { return type_; }
   size_t depth() const { return depth_; }
   bool is_root_node() const { return !parent_; }
+  bool is_filler_node() const { return infostate_string_ == kFillerInfostate; }
   bool has_infostate_string() const {
     return infostate_string_ != kFillerInfostate &&
            infostate_string_ != kDummyRootNodeInfostate;
