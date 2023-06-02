@@ -264,6 +264,7 @@ class InfostateNode;
 // of the game, up to some move limit.
 std::shared_ptr<InfostateTree> MakeInfostateTree(const Game& game,
                                                  Player acting_player,
+                                                 bool store_world_states = false,
                                                  int max_move_limit = 1000);
 
 // Creates an infostate tree for a player based on some start states,
@@ -272,6 +273,7 @@ std::shared_ptr<InfostateTree> MakeInfostateTree(
     const std::vector<const State*>& start_states,
     const std::vector<double>& chance_reach_probs,
     std::shared_ptr<Observer> infostate_observer, Player acting_player,
+    bool store_world_states = false,
     int max_move_ahead_limit = 1000);
 
 // Creates an infostate tree based on some leaf infostate nodes coming from
@@ -279,6 +281,7 @@ std::shared_ptr<InfostateTree> MakeInfostateTree(
 // This is useful for easily constructing (depth-limited) tree continuations.
 std::shared_ptr<InfostateTree> MakeInfostateTree(
     const std::vector<const InfostateNode*>& start_nodes,
+    bool store_world_states = false,
     int max_move_ahead_limit = 1000);
 
 // C++17 does not allow implicit conversion of non-const pointers to const
@@ -286,6 +289,7 @@ std::shared_ptr<InfostateTree> MakeInfostateTree(
 // This just adds const to the pointers and calls the other MakeInfostateTree.
 std::shared_ptr<InfostateTree> MakeInfostateTree(
     const std::vector<InfostateNode*>& start_nodes,
+    bool store_world_states = false,
     int max_move_ahead_limit = 1000);
 
 class InfostateTree final : public std::enable_shared_from_this<InfostateTree> {
@@ -297,15 +301,16 @@ class InfostateTree final : public std::enable_shared_from_this<InfostateTree> {
   InfostateTree(const std::vector<const State*>& start_states,
                 const std::vector<double>& chance_reach_probs,
                 std::shared_ptr<Observer> infostate_observer,
-                Player acting_player, int max_move_ahead_limit);
+                Player acting_player, bool store_world_states,
+                int max_move_ahead_limit);
   // Friend factories.
   friend std::shared_ptr<InfostateTree> MakeInfostateTree(const Game&, Player,
-                                                          int);
+                                                          bool, int);
   friend std::shared_ptr<InfostateTree> MakeInfostateTree(
       const std::vector<const State*>&, const std::vector<double>&,
-      std::shared_ptr<Observer>, Player, int);
+      std::shared_ptr<Observer>, Player, bool, int);
   friend std::shared_ptr<InfostateTree> MakeInfostateTree(
-      const std::vector<const InfostateNode*>&, int);
+      const std::vector<const InfostateNode*>&, bool, int);
 
  public:
   // -- gain shared ownership of the allocated infostate object
@@ -388,6 +393,8 @@ class InfostateTree final : public std::enable_shared_from_this<InfostateTree> {
     return nodes_at_depths_.at(depth);
   }
 
+  bool stores_all_world_states() const { return store_all_world_states_; }
+
   // -- Tree operations --------------------------------------------------------
   // Compute best response and value based on gradient from opponents.
   // This consumes the gradient vector, as it is used to compute the value.
@@ -411,6 +418,9 @@ class InfostateTree final : public std::enable_shared_from_this<InfostateTree> {
   std::vector<InfostateNode*> sequences_;
   // The last vector corresponds to the leaf nodes.
   std::vector<std::vector<InfostateNode*>> nodes_at_depths_;
+  // whether to store all underlying world states (histories) of the infostate
+  // nodes
+  const bool store_all_world_states_;
 
   // Utility functions whenever we create a new node for the tree.
   std::unique_ptr<InfostateNode> MakeNode(InfostateNode* parent,
@@ -427,20 +437,23 @@ class InfostateTree final : public std::enable_shared_from_this<InfostateTree> {
   // to balance all the leaves.
   void RebalanceTree();
 
-  void UpdateLeafNode(InfostateNode* node, const State& state,
-                      size_t leaf_depth, double chance_reach_probs);
+  void UpdateNode(InfostateNode* node, std::shared_ptr<const State> state,
+                  size_t node_depth,
+                  double chance_reach_probs);
 
   // Build the tree.
   void RecursivelyBuildTree(InfostateNode* parent, size_t depth,
-                            const State& state, int move_limit,
+                            std::shared_ptr<const State> state, int move_limit,
                             double chance_reach_prob);
-  void BuildTerminalNode(InfostateNode* parent, size_t depth,
-                         const State& state, double chance_reach_prob);
-  void BuildDecisionNode(InfostateNode* parent, size_t depth,
-                         const State& state, int move_limit,
+  std::pair<InfostateNode *, bool> BuildTerminalNode(InfostateNode* parent, size_t depth,
+                    const std::shared_ptr<const State>& state, double chance_reach_prob);
+  std::pair<InfostateNode *, bool>
+  BuildDecisionNode(InfostateNode* parent, size_t depth,
+                    const std::shared_ptr<const State>& state, int move_limit,
                          double chance_reach_prob);
-  void BuildObservationNode(InfostateNode* parent, size_t depth,
-                            const State& state, int move_limit,
+  std::pair<InfostateNode *, bool>
+  BuildObservationNode(InfostateNode* parent, size_t depth,
+                       const std::shared_ptr<const State>& state, int move_limit,
                             double chance_reach_prob);
 
   void CollectNodesAtDepth(InfostateNode* node, size_t depth);
@@ -531,7 +544,7 @@ class InfostateNode final {
   /*const*/ std::vector<std::unique_ptr<InfostateNode>> children_;
   // Store States that correspond to a leaf node.
   // This is not const so that we can add corresponding states.
-  /*const*/ std::vector<std::unique_ptr<State>> corresponding_states_;
+  /*const*/ std::vector<std::shared_ptr<const State>> corresponding_states_;
   // Store chance reach probs for States that correspond to a leaf node.
   // This is not const so that we can add corresponding reaches.
   /*const*/ std::vector<double> corresponding_ch_reaches_;
@@ -562,14 +575,18 @@ class InfostateNode final {
     return infostate_string_ != kFillerInfostate &&
            infostate_string_ != kDummyRootNodeInfostate;
   }
-  const std::string& infostate_string() const {
+  std::string_view infostate_string() const {
     // Avoid working with empty infostate strings.
     SPIEL_DCHECK_TRUE(has_infostate_string());
     return infostate_string_;
   }
 
   // -- Children accessors. ----------------------------------------------------
-  InfostateNode* child_at(int i) const { return children_.at(i).get(); }
+  InfostateNode* child_at(int i, bool include_filler_node = true) const {
+    if(include_filler_node)
+      return _child_at<true>(i);
+    return _child_at<false>(i);
+  }
   int num_children() const { return children_.size(); }
   VecWithUniquePtrsIterator<InfostateNode> child_iterator() const {
     return VecWithUniquePtrsIterator<InfostateNode>(children_);
@@ -617,11 +634,19 @@ class InfostateNode final {
   size_t corresponding_states_size() const {
     return corresponding_states_.size();
   }
-  const std::vector<std::unique_ptr<State>>& corresponding_states() const {
+
+  const std::vector< std::shared_ptr< const State > >& corresponding_states() const {
+    if(tree().stores_all_world_states()) {
+      return corresponding_states_;
+    }
     SPIEL_CHECK_TRUE(is_leaf_node());
     return corresponding_states_;
   }
-  const std::vector<double>& corresponding_chance_reach_probs() const {
+
+  const std::vector< double >& corresponding_chance_reach_probs() const {
+    if(tree().stores_all_world_states()) {
+      return corresponding_ch_reaches_;
+    }
     SPIEL_CHECK_TRUE(is_leaf_node());
     return corresponding_ch_reaches_;
   }
@@ -653,7 +678,20 @@ class InfostateNode final {
                   int at_index);
 
   InfostateNode* AddChild(std::unique_ptr<InfostateNode> child);
-  InfostateNode* GetChild(const std::string& infostate_string) const;
+  InfostateNode* GetChild(std::string_view infostate_string) const;
+
+  template< bool accept_filler>
+  InfostateNode* _child_at(int i) const {
+    if constexpr(accept_filler)
+      return children_.at(i).get();
+    else {
+      InfostateNode* child = children_.at(i).get();
+      if(child->is_filler_node()) {
+        return child->_child_at<false>(0);
+      }
+      return child;
+    }
+  }
 };
 
 namespace internal {
