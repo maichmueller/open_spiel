@@ -59,7 +59,7 @@ void init_pyspiel_policy(py::module& m) {
          )
          .def(
             "action_probabilities",
-            py::overload_cast< const std::string& >(&Policy::GetStatePolicyAsMap, py::const_),
+            py::overload_cast< std::string_view >(&Policy::GetStatePolicyAsMap, py::const_),
             py::arg("info_state"),
             "Returns a dictionary mapping actions to probabilities for the policy at the given "
             "information state."
@@ -80,7 +80,7 @@ void init_pyspiel_policy(py::module& m) {
          )
          .def(
             "get_state_policy",
-            py::overload_cast< const std::string& >(&Policy::GetStatePolicy, py::const_),
+            py::overload_cast< std::string_view >(&Policy::GetStatePolicy, py::const_),
             py::arg("info_state"),
             "Returns a list of (action, prob) pairs for the policy at the given info state."
          )
@@ -92,7 +92,7 @@ void init_pyspiel_policy(py::module& m) {
          )
          .def(
             "get_state_policy_as_parallel_vectors",
-            py::overload_cast< const std::string& >(
+            py::overload_cast< std::string_view >(
                &Policy::GetStatePolicyAsParallelVectors,
                py::const_
             ),

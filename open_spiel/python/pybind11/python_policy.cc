@@ -23,7 +23,7 @@ std::pair< std::vector< Action >, std::vector< double > > PyPolicy::GetStatePoli
    );
 }
 std::pair< std::vector< Action >, std::vector< double > > PyPolicy::GetStatePolicyAsParallelVectors(
-   const std::string& info_state
+    std::string_view info_state
 ) const
 {
    PYBIND11_OVERRIDE_NAME(
@@ -44,7 +44,7 @@ std::unordered_map< Action, double > PyPolicy::GetStatePolicyAsMap(const State& 
       state
    );
 }
-std::unordered_map< Action, double > PyPolicy::GetStatePolicyAsMap(const std::string& info_state
+std::unordered_map< Action, double > PyPolicy::GetStatePolicyAsMap(std::string_view info_state
 ) const
 {
    PYBIND11_OVERRIDE_NAME(
@@ -65,7 +65,7 @@ ActionsAndProbs PyPolicy::GetStatePolicy(const State& state, Player player) cons
       ActionsAndProbs, Policy, "get_state_policy", GetStatePolicy, state, player
    );
 }
-ActionsAndProbs PyPolicy::GetStatePolicy(const std::string& info_state) const
+ActionsAndProbs PyPolicy::GetStatePolicy(std::string_view info_state) const
 {
    PYBIND11_OVERRIDE_NAME(ActionsAndProbs, Policy, "get_state_policy", GetStatePolicy, info_state);
 }

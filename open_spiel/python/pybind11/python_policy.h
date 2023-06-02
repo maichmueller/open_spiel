@@ -26,19 +26,19 @@ class PyPolicy: public Policy, public py::trampoline_self_life_support {
    ) const override;
 
    std::pair< std::vector< Action >, std::vector< double > > GetStatePolicyAsParallelVectors(
-      const std::string& info_state
+       std::string_view info_state
    ) const override;
 
    std::unordered_map< Action, double > GetStatePolicyAsMap(const State& state) const override;
 
-   std::unordered_map< Action, double > GetStatePolicyAsMap(const std::string& info_state
+   std::unordered_map< Action, double > GetStatePolicyAsMap(std::string_view info_state
    ) const override;
 
    ActionsAndProbs GetStatePolicy(const State& state) const override;
 
    ActionsAndProbs GetStatePolicy(const State& state, Player player) const override;
 
-   ActionsAndProbs GetStatePolicy(const std::string& info_state) const override;
+   ActionsAndProbs GetStatePolicy(std::string_view info_state) const override;
 
    std::string Serialize(int double_precision, std::string delimiter) const override;
 };
