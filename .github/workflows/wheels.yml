@@ -11,7 +11,7 @@ name: wheels
 on:
   # Test the wheels for each PR to ensure the PR doesn't break them.
   pull_request:
-    branches: [ master ]
+    branches: [ master, develop ]
   # Workflow dispatch is a way to manually trigger workflows. This will be
   # used to build and test the wheels manually for releases.
   workflow_dispatch:
@@ -20,6 +20,10 @@ on:
         description: 'Workflow dispatch (triggered manually)'
         required: false
         default: 'No name specified'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build_wheels:
