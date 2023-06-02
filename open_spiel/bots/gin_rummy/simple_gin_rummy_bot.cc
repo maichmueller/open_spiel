@@ -25,14 +25,6 @@
 
 namespace open_spiel::gin_rummy {
 
-SimpleGinRummyBot::SimpleGinRummyBot(GameParameters params,
-                                     const Player player_id)
-    : params_(std::move(params)),
-      player_id_(player_id),
-      hand_size_(params_["hand_size"].int_value()),
-      utils_(params_["num_ranks"].int_value(), params_["num_suits"].int_value(),
-             params_["hand_size"].int_value()) {}
-
 void SimpleGinRummyBot::Restart() {
   knocked_ = false;
   next_actions_ = {};
