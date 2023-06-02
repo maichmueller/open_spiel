@@ -32,10 +32,12 @@
 #include "open_spiel/abseil-cpp/absl/synchronization/mutex.h"
 #include "open_spiel/abseil-cpp/absl/types/optional.h"
 #include "open_spiel/abseil-cpp/absl/types/span.h"
+#include "open_spiel/abseil-cpp/absl/container/btree_map.h"
 #include "open_spiel/game_parameters.h"
 #include "open_spiel/observer.h"
 #include "open_spiel/spiel_globals.h"
 #include "open_spiel/spiel_utils.h"
+#include "open_spiel/utils/heterogenous_lookup.h"
 
 namespace open_spiel {
 
@@ -219,7 +221,7 @@ class State {
   // since this shared pointer to the parent is required, Game objects cannot
   // be used as value types and should always be created via a shared pointer.
   // See the documentation of the Game object for further details.
-  State(std::shared_ptr<const Game> game);
+  State(const std::shared_ptr<const Game>& game);
   State(const State&) = default;
 
   // Returns current player. Player numbers start from 0.
@@ -300,8 +302,8 @@ class State {
   // Note: This currently just loops over all legal actions, converts them into
   // a string, and checks equality, so it can be very slow.
   virtual Action StringToAction(Player player,
-                                const std::string& action_str) const;
-  Action StringToAction(const std::string& action_str) const {
+                                std::string_view action_str) const;
+  Action StringToAction(std::string_view action_str) const {
     return StringToAction(CurrentPlayer(), action_str);
   }
 
@@ -763,7 +765,7 @@ class Game : public std::enable_shared_from_this<Game> {
 
   // Returns a newly allocated initial state.
   virtual std::unique_ptr<State> NewInitialState() const = 0;
-  virtual std::unique_ptr<State> NewInitialState(const std::string& str) const {
+  virtual std::unique_ptr<State> NewInitialState(std::string_view str) const {
     SpielFatalError("NewInitialState from string is not implemented.");
   }
 
@@ -865,7 +867,7 @@ class Game : public std::enable_shared_from_this<Game> {
   //
   // If this method is overridden, then it should be the inverse of
   // State::Serialize (i.e. that method should also be overridden).
-  virtual std::unique_ptr<State> DeserializeState(const std::string& str) const;
+  virtual std::unique_ptr<State> DeserializeState(std::string_view str) const;
 
   // The maximum length of any one game (in terms of number of decision nodes
   // visited in the game tree). For a simultaneous action game, this is the
@@ -918,7 +920,7 @@ class Game : public std::enable_shared_from_this<Game> {
     // instead of game_parameters_ makes sure that game equality is independent
     // of the presence of explicitly passed game parameters with default values.
     return game_type_.short_name == other.game_type_.short_name &&
-           GetParameters() == other.GetParameters();
+           GameParametersEquality(GetParameters(), other.GetParameters());
   }
 
   // Get and set game's internal RNG state for de/serialization purposes. These
@@ -931,7 +933,7 @@ class Game : public std::enable_shared_from_this<Game> {
   // SetRNGState is const despite the fact that it changes game's internal
   // state. Sampled stochastic games need to be explicit about mutability of the
   // RNG, i.e. have to use the mutable keyword.
-  virtual void SetRNGState(const std::string& rng_state) const {
+  virtual void SetRNGState(std::string_view rng_state) const {
     SpielFatalError("SetRNGState unimplemented.");
   }
 
@@ -974,56 +976,19 @@ class Game : public std::enable_shared_from_this<Game> {
   }
 
  protected:
-  Game(GameType game_type, GameParameters game_parameters)
-      : game_type_(game_type), game_parameters_(game_parameters) {}
+  Game(GameType game_type, const GameParameters& game_parameters)
+       : game_type_(std::move(game_type)),
+         game_parameters_(game_parameters) {
+//    CopyGameParameters(game_parameters, game_parameters_);
+  }
 
-  // Access to game parameters. Returns the value provided by the user. If not:
+   // Access to game parameters. Returns the value provided by the user. If not:
   // - Defaults to the value stored as the default in
   // game_type.parameter_specification if the `default_value` is absl::nullopt
   // - Returns `default_value` if provided.
   template <typename T>
-  T ParameterValue(const std::string& key,
-                   absl::optional<T> default_value = absl::nullopt) const {
-    // Return the value if found.
-    auto iter = game_parameters_.find(key);
-    if (iter != game_parameters_.end()) {
-      return iter->second.value<T>();
-    }
-
-    // Pick the defaulted value.
-    GameParameter default_game_parameter;
-    if (default_value.has_value()) {
-      default_game_parameter = GameParameter(default_value.value());
-    } else {
-      auto default_iter = game_type_.parameter_specification.find(key);
-      if (default_iter == game_type_.parameter_specification.end()) {
-        SpielFatalError(absl::StrCat("The parameter for ", key,
-                                     " is missing in game ", ToString()));
-      }
-      default_game_parameter = default_iter->second;
-    }
-
-    // Return the default value, storing it.
-    absl::MutexLock lock(&mutex_defaulted_parameters_);
-    iter = defaulted_parameters_.find(key);
-    if (iter == defaulted_parameters_.end()) {
-      // We haven't previously defaulted this value, so store the default we
-      // used.
-      defaulted_parameters_[key] = default_game_parameter;
-    } else {
-      // Already defaulted, so check we are being consistent.
-      // Using different default values at different times means the game isn't
-      // well-defined.
-      if (default_game_parameter != iter->second) {
-        SpielFatalError(absl::StrCat("Parameter ", key, " is defaulted to ",
-                                     default_game_parameter.ToReprString(),
-                                     " having previously been defaulted to ",
-                                     iter->second.ToReprString(), " in game ",
-                                     ToString()));
-      }
-    }
-    return default_game_parameter.value<T>();
-  }
+  T ParameterValue(std::string_view key,
+                   absl::optional<T> default_value = absl::nullopt) const;
 
   // The game type.
   GameType game_type_;
@@ -1038,6 +1003,55 @@ class Game : public std::enable_shared_from_this<Game> {
   mutable absl::Mutex mutex_defaulted_parameters_;
 };
 
+template <typename T>
+T Game::ParameterValue(std::string_view key,
+                       absl::optional<T> default_value) const
+{
+  // Return the value if found.
+  auto iter = game_parameters_.find(key);
+  if (iter != game_parameters_.end()) {
+    return iter->second->value<T>();
+  }
+
+  // Pick the defaulted value.
+  GameParameter default_game_parameter;
+  if (default_value.has_value()) {
+    default_game_parameter = GameParameter(default_value.value());
+  } else {
+    auto default_iter = game_type_.parameter_specification.find(key);
+    if (default_iter == game_type_.parameter_specification.end()) {
+      SpielFatalError(absl::StrCat("The parameter for ", key,
+                                   " is missing in game ", ToString()));
+    }
+    default_game_parameter = *default_iter->second;
+  }
+
+  // Return the default value, storing it.
+  absl::MutexLock lock(&mutex_defaulted_parameters_);
+  iter = defaulted_parameters_.find(key);
+  if (iter == defaulted_parameters_.end()) {
+    // We haven't previously defaulted this value, so store the default we
+    // used.
+    defaulted_parameters_.emplace(
+        key,
+        MakeGameParameter(default_game_parameter));
+  } else {
+    // Already defaulted, so check we are being consistent.
+    // Using different default values at different times means the game isn't
+    // well-defined.
+    if (default_game_parameter != *iter->second) {
+      SpielFatalError(absl::StrCat("Parameter ", key, " is defaulted to ",
+                                   default_game_parameter.ToReprString(),
+                                   " having previously been defaulted to ",
+                                   iter->second->ToReprString(), " in game ",
+                                   ToString()));
+    }
+  }
+  return default_game_parameter.value<T>();
+}
+
+
+
 #define CONCAT_(x, y) x##y
 #define CONCAT(x, y) CONCAT_(x, y)
 #define REGISTER_SPIEL_GAME(info, factory) \
@@ -1048,29 +1062,33 @@ class GameRegisterer {
   using CreateFunc =
       std::function<std::shared_ptr<const Game>(const GameParameters& params)>;
 
-  GameRegisterer(const GameType& game_type, CreateFunc creator);
+  GameRegisterer(const GameType& game_type, const CreateFunc& creator);
 
-  static std::shared_ptr<const Game> CreateByName(const std::string& short_name,
+  static std::shared_ptr<const Game> CreateByName(std::string_view short_name,
                                                   const GameParameters& params);
 
   static std::vector<std::string> RegisteredNames();
   static std::vector<GameType> RegisteredGames();
-  static bool IsValidName(const std::string& short_name);
-  static void RegisterGame(const GameType& game_type, CreateFunc creator);
+  static bool IsValidName(std::string_view short_name);
+  static void RegisterGame(const GameType& game_type, const CreateFunc& creator);
 
  private:
   // Returns a "global" map of registrations (i.e. an object that lives from
   // initialization to the end of the program). Note that we do not just use
   // a static data member, as we want the map to be initialized before first
   // use.
-  static std::map<std::string, std::pair<GameType, CreateFunc>>& factories() {
-    static std::map<std::string, std::pair<GameType, CreateFunc>> impl;
+  static absl::btree_map<std::string, std::pair<GameType, CreateFunc>,
+                         internal::StringCmp> &
+  factories() {
+    static absl::btree_map<std::string, std::pair<GameType, CreateFunc>,
+                           internal::StringCmp>
+        impl;
     return impl;
   }
 };
 
 // Returns true if the game is registered, false otherwise.
-bool IsGameRegistered(const std::string& short_name);
+bool IsGameRegistered(std::string_view short_name);
 
 // Returns a list of registered games' short names.
 std::vector<std::string> RegisteredGames();
@@ -1078,14 +1096,14 @@ std::vector<std::string> RegisteredGames();
 // Returns a list of registered game types.
 std::vector<GameType> RegisteredGameTypes();
 
-std::shared_ptr<const Game> DeserializeGame(const std::string& serialized);
+std::shared_ptr<const Game> DeserializeGame(std::string_view serialized);
 
 // Returns a new game object from the specified string, which is the short
 // name plus optional parameters, e.g. "go(komi=4.5,board_size=19)"
-std::shared_ptr<const Game> LoadGame(const std::string& game_string);
+std::shared_ptr<const Game> LoadGame(std::string_view game_string);
 
 // Returns a new game object with the specified parameters.
-std::shared_ptr<const Game> LoadGame(const std::string& short_name,
+std::shared_ptr<const Game> LoadGame(std::string_view short_name,
                                      const GameParameters& params);
 
 // Returns a new game object with the specified parameters; reads the name
@@ -1141,7 +1159,7 @@ std::string SerializeGameAndState(const Game& game, const State& state);
 // kSampledStochastic, as there is currently no general way to set the state's
 // seed.
 std::pair<std::shared_ptr<const Game>, std::unique_ptr<State>>
-DeserializeGameAndState(const std::string& serialized_state);
+DeserializeGameAndState(std::string_view serialized_state);
 
 // Convert GameTypes from and to strings. Used for serialization of objects
 // that contain them.
@@ -1149,7 +1167,7 @@ DeserializeGameAndState(const std::string& serialized_state);
 // contributor. See https://github.com/deepmind/open_spiel/issues/234 for
 // details.
 std::string GameTypeToString(const GameType& game_type);
-GameType GameTypeFromString(const std::string& game_type_str);
+GameType GameTypeFromString(std::string_view game_type_str);
 
 std::ostream& operator<<(std::ostream& os, const State::PlayerAction& action);
 
@@ -1165,7 +1183,7 @@ std::string ActionsToString(const State& state,
 
 // A utility to broadcast an error message with game and state info.
 // It is a wrapper around SpielFatalError and meant to facilitate debugging.
-void SpielFatalErrorWithStateInfo(const std::string& error_msg,
+void SpielFatalErrorWithStateInfo(std::string_view error_msg,
                                   const Game& game,
                                   const State& state);
 

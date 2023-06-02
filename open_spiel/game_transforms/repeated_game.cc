@@ -42,14 +42,14 @@ const GameType kGameType{
     /*provides_observation_tensor=*/true,
     /*parameter_specification=*/
     {{"stage_game",
-      GameParameter(GameParameter::Type::kGame, /*is_mandatory=*/true)},
+      MakeGameParameter(GameParameter::Type::kGame, /*is_mandatory=*/true)},
      {"num_repetitions",
-      GameParameter(GameParameter::Type::kInt, /*is_mandatory=*/true)},
-     {"recall", GameParameter(kDefaultRecall)}},
+      MakeGameParameter(GameParameter::Type::kInt, /*is_mandatory=*/true)},
+     {"recall", MakeGameParameter(kDefaultRecall)}},
      /*default_loadable=*/false};
 
 std::shared_ptr<const Game> Factory(const GameParameters& params) {
-  return CreateRepeatedGame(*LoadGame(params.at("stage_game").game_value()),
+  return CreateRepeatedGame(*LoadGame(params.at("stage_game")->game_value()),
                             params);
 }
 
@@ -267,7 +267,7 @@ std::shared_ptr<const Game> CreateRepeatedGame(const Game& stage_game,
 }
 
 std::shared_ptr<const Game> CreateRepeatedGame(
-    const std::string& stage_game_name, const GameParameters& params) {
+    std::string_view stage_game_name, const GameParameters& params) {
   auto game = LoadGame(stage_game_name);
   // The stage game must be a deterministic normal-form (one-shot) game.
   SPIEL_CHECK_EQ(game->MaxGameLength(), 1);

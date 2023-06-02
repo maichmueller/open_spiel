@@ -70,17 +70,17 @@ void ValidateParams(const GameParameters& params,
           "Unknown parameter '", param.first,
           "'. Available parameters are: ", ListValidParameters(param_spec)));
     }
-    if (it->second.type() != param.second.type()) {
+    if (it->second->type() != param.second->type()) {
       SpielFatalError(absl::StrCat(
           "Wrong type for parameter ", param.first,
-          ". Expected type: ", GameParameterTypeToString(it->second.type()),
-          ", got ", GameParameterTypeToString(param.second.type()), " with ",
-          param.second.ToString()));
+          ". Expected type: ", GameParameter::TypeToString(it->second->type()),
+          ", got ", GameParameter::TypeToString(param.second->type()), " with ",
+          param.second->ToString()));
     }
   }
   // Check we aren't missing any mandatory parameters.
   for (const auto& param : param_spec) {
-    if (param.second.is_mandatory() && !params.count(param.first)) {
+    if (param.second->is_mandatory() && !params.count(param.first)) {
       SpielFatalError(absl::StrCat("Missing parameter ", param.first));
     }
   }
@@ -124,19 +124,19 @@ StateType State::GetType() const {
 
 bool GameType::ContainsRequiredParameters() const {
   for (const auto& key_val : parameter_specification) {
-    if (key_val.second.is_mandatory()) {
+    if (key_val.second->is_mandatory()) {
       return true;
     }
   }
   return false;
 }
 
-GameRegisterer::GameRegisterer(const GameType& game_type, CreateFunc creator) {
+GameRegisterer::GameRegisterer(const GameType& game_type, const CreateFunc& creator) {
   RegisterGame(game_type, creator);
 }
 
 std::shared_ptr<const Game> GameRegisterer::CreateByName(
-    const std::string& short_name, const GameParameters& params) {
+    std::string_view short_name, const GameParameters& params) {
   auto iter = factories().find(short_name);
   if (iter == factories().end()) {
     SpielFatalError(absl::StrCat("Unknown game '", short_name,
@@ -165,16 +165,16 @@ std::vector<GameType> GameRegisterer::RegisteredGames() {
   return games;
 }
 
-bool GameRegisterer::IsValidName(const std::string& short_name) {
+bool GameRegisterer::IsValidName(std::string_view short_name) {
   return factories().find(short_name) != factories().end();
 }
 
 void GameRegisterer::RegisterGame(const GameType& game_type,
-                                  GameRegisterer::CreateFunc creator) {
+                                  const GameRegisterer::CreateFunc& creator) {
   factories()[game_type.short_name] = std::make_pair(game_type, creator);
 }
 
-bool IsGameRegistered(const std::string& short_name) {
+bool IsGameRegistered(std::string_view short_name) {
   return GameRegisterer::IsValidName(short_name);
 }
 
@@ -186,7 +186,7 @@ std::vector<GameType> RegisteredGameTypes() {
   return GameRegisterer::RegisteredGames();
 }
 
-std::shared_ptr<const Game> DeserializeGame(const std::string& serialized) {
+std::shared_ptr<const Game> DeserializeGame(std::string_view serialized) {
   std::pair<std::string, std::string> game_and_rng_state =
       absl::StrSplit(serialized, kSerializeGameRNGStateSectionHeader);
 
@@ -208,11 +208,11 @@ std::shared_ptr<const Game> DeserializeGame(const std::string& serialized) {
   return game;
 }
 
-std::shared_ptr<const Game> LoadGame(const std::string& game_string) {
+std::shared_ptr<const Game> LoadGame(std::string_view game_string) {
   return LoadGame(GameParametersFromString(game_string));
 }
 
-std::shared_ptr<const Game> LoadGame(const std::string& short_name,
+std::shared_ptr<const Game> LoadGame(std::string_view short_name,
                                      const GameParameters& params) {
   std::shared_ptr<const Game> result =
       GameRegisterer::CreateByName(short_name, params);
@@ -222,13 +222,14 @@ std::shared_ptr<const Game> LoadGame(const std::string& short_name,
   return result;
 }
 
+
 std::shared_ptr<const Game> LoadGame(GameParameters params) {
   auto it = params.find("name");
   if (it == params.end()) {
     SpielFatalError(absl::StrCat("No 'name' parameter in params: ",
                                  GameParametersToString(params)));
   }
-  std::string name = it->second.string_value();
+  std::string name = it->second->string_value();
   params.erase(it);
   std::shared_ptr<const Game> result =
       GameRegisterer::CreateByName(name, params);
@@ -239,7 +240,7 @@ std::shared_ptr<const Game> LoadGame(GameParameters params) {
   return result;
 }
 
-State::State(std::shared_ptr<const Game> game)
+State::State(const std::shared_ptr<const Game>& game)
     : game_(game),
       num_distinct_actions_(game->NumDistinctActions()),
       num_players_(game->NumPlayers()),
@@ -310,8 +311,7 @@ std::string State::Serialize() const {
   return absl::StrCat(absl::StrJoin(History(), "\n"), "\n");
 }
 
-Action State::StringToAction(Player player,
-                             const std::string& action_str) const {
+Action State::StringToAction(Player player, std::string_view action_str) const {
   for (const Action action : LegalActions()) {
     if (action_str == ActionToString(player, action)) return action;
   }
@@ -390,7 +390,7 @@ std::vector<std::unique_ptr<State>> Game::NewInitialStates() const {
   return states;
 }
 
-std::unique_ptr<State> Game::DeserializeState(const std::string& str) const {
+std::unique_ptr<State> Game::DeserializeState(std::string_view str) const {
   // This does not work for games with sampled chance nodes and for mean field
   //  games. See comments in State::Serialize() for the explanation. If you wish
   //  to serialize states in such games, you must implement custom serialization
@@ -448,7 +448,7 @@ std::string SerializeGameAndState(const Game& game, const State& state) {
 }
 
 std::pair<std::shared_ptr<const Game>, std::unique_ptr<State>>
-DeserializeGameAndState(const std::string& serialized_state) {
+DeserializeGameAndState(std::string_view serialized_state) {
   std::vector<std::string> lines = absl::StrSplit(serialized_state, '\n');
 
   enum Section { kInvalid = -1, kMeta = 0, kGame = 1, kState = 2 };
@@ -647,12 +647,12 @@ std::string Game::Serialize() const {
 
 std::string Game::ToString() const {
   GameParameters params = game_parameters_;
-  params["name"] = GameParameter(game_type_.short_name);
+  params["name"] = MakeGameParameter(game_type_.short_name);
   return GameParametersToString(params);
 }
 
 std::string GameTypeToString(const GameType& game_type) {
-  std::string str = "";
+  std::string str{};
 
   absl::StrAppend(&str, "short_name: ", game_type.short_name, "\n");
   absl::StrAppend(&str, "long_name: ", game_type.long_name, "\n");
@@ -704,7 +704,7 @@ std::string GameTypeToString(const GameType& game_type) {
   return str;
 }
 
-GameType GameTypeFromString(const std::string& game_type_str) {
+GameType GameTypeFromString(std::string_view game_type_str) {
   std::map<std::string, std::string> game_type_values;
   std::vector<std::string> parts = absl::StrSplit(game_type_str, '\n');
 
@@ -823,7 +823,7 @@ std::string ActionsToString(const State& state,
       "[", absl::StrJoin(ActionsToStrings(state, actions), ", "), "]");
 }
 
-void SpielFatalErrorWithStateInfo(const std::string& error_msg,
+void SpielFatalErrorWithStateInfo(std::string_view error_msg,
                                   const Game& game,
                                   const State& state) {
   // A fatal error wrapper designed to return useful debugging information.

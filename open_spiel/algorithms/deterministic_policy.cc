@@ -58,8 +58,7 @@ DeterministicTabularPolicy::DeterministicTabularPolicy(const Game& game,
   CreateTable(game, player);
 }
 
-ActionsAndProbs DeterministicTabularPolicy::GetStatePolicy(
-    const std::string& info_state) const {
+ActionsAndProbs DeterministicTabularPolicy::GetStatePolicy(std::string_view info_state) const {
   auto iter = table_.find(info_state);
   SPIEL_CHECK_TRUE(iter != table_.end());
   ActionsAndProbs state_policy;
@@ -71,7 +70,7 @@ ActionsAndProbs DeterministicTabularPolicy::GetStatePolicy(
 }
 
 Action DeterministicTabularPolicy::GetAction(
-    const std::string& info_state) const {
+    std::string_view info_state) const {
   auto iter = table_.find(info_state);
   SPIEL_CHECK_TRUE(iter != table_.end());
   return iter->second.GetAction();
@@ -123,7 +122,7 @@ void DeterministicTabularPolicy::CreateTable(const Game& game, Player player) {
 }
 
 std::string DeterministicTabularPolicy::ToString(
-    const std::string& delimiter) const {
+    std::string_view delimiter) const {
   std::string str = "";
   for (const auto& info_state_entry : table_) {
     absl::StrAppend(&str, info_state_entry.first, " ", delimiter, " ",

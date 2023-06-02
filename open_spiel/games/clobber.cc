@@ -59,8 +59,8 @@ const GameType kGameType{/*short_name=*/"clobber",
                          /*provides_observation_string=*/true,
                          /*provides_observation_tensor=*/true,
                          /*parameter_specification=*/
-                         {{"rows", GameParameter(kDefaultRows)},
-                          {"columns", GameParameter(kDefaultColumns)}}};
+                         {{"rows", MakeGameParameter(kDefaultRows)},
+                          {"columns", MakeGameParameter(kDefaultColumns)}}};
 
 std::shared_ptr<const Game> Factory(const GameParameters& params) {
   return std::shared_ptr<const Game>(new ClobberGame(params));
@@ -175,7 +175,7 @@ ClobberState::ClobberState(std::shared_ptr<const Game> game, int rows,
 }
 
 ClobberState::ClobberState(std::shared_ptr<const Game> game, int rows,
-                           int columns, const std::string& board_string)
+                           int columns, std::string_view board_string)
     : State(game), rows_(rows), columns_(columns) {
   SPIEL_CHECK_GE(rows_, 1);
   SPIEL_CHECK_GE(columns_, 1);

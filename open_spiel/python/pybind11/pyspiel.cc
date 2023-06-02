@@ -93,7 +93,7 @@ namespace py = ::pybind11;
 // Python, and exit the process otherwise.
 class SpielException : public std::exception {
  public:
-  explicit SpielException(std::string message) : message_(message) {}
+  explicit SpielException(std::string_view message) : message_(message) {}
   const char* what() const noexcept override { return message_.c_str(); }
 
  private:
@@ -283,10 +283,10 @@ PYBIND11_MODULE(pyspiel, m) {
       .def("action_to_string",
            (std::string(State::*)(Action) const) & State::ActionToString)
       .def("string_to_action",
-           (Action(State::*)(Player, const std::string&) const) &
+           (Action(State::*)(Player, std::string_view) const) &
                State::StringToAction)
       .def("string_to_action",
-           (Action(State::*)(const std::string&) const) & State::StringToAction)
+           (Action(State::*)(std::string_view) const) & State::StringToAction)
       .def("__str__", &State::ToString)
       .def("__repr__", &State::ToString)
       .def("to_string", &State::ToString)
@@ -354,7 +354,7 @@ PYBIND11_MODULE(pyspiel, m) {
       .def("new_initial_state",
            [](const Game* self) { return self->NewInitialState(); })
       .def("new_initial_state",
-           [](const Game* self, const std::string& s) {
+           [](const Game* self, std::string_view s) {
              return self->NewInitialState(s);
            })
       .def("new_initial_state_for_population",
@@ -499,7 +499,7 @@ PYBIND11_MODULE(pyspiel, m) {
         &open_spiel::TurnBasedGoofspielGameString);
 
   m.def("create_matrix_game",
-        py::overload_cast<const std::string&, const std::string&,
+        py::overload_cast<std::string_view, std::string_view,
                           const std::vector<std::string>&,
                           const std::vector<std::string>&,
                           const std::vector<std::vector<double>>&,
@@ -514,7 +514,7 @@ PYBIND11_MODULE(pyspiel, m) {
         "Creates an arbitrary matrix game from dimensions and utilities.");
 
   m.def("create_tensor_game",
-        py::overload_cast<const std::string&, const std::string&,
+        py::overload_cast<std::string_view, std::string_view,
                           const std::vector<std::vector<std::string>>&,
                           const std::vector<std::vector<double>>&>(
             &open_spiel::tensor_game::CreateTensorGame),
@@ -556,12 +556,12 @@ PYBIND11_MODULE(pyspiel, m) {
         "Get the Gambit .nfg text for a normal-form game.");
 
   m.def("load_game",
-        py::overload_cast<const std::string&>(&open_spiel::LoadGame),
+        py::overload_cast<std::string_view>(&open_spiel::LoadGame),
         "Returns a new game object for the specified short name using default "
         "parameters");
 
   m.def("load_game",
-        py::overload_cast<const std::string&, const GameParameters&>(
+        py::overload_cast<std::string_view, const GameParameters&>(
             &open_spiel::LoadGame),
         "Returns a new game object for the specified short name using given "
         "parameters");
@@ -598,7 +598,7 @@ PYBIND11_MODULE(pyspiel, m) {
 
   m.def(
       "deserialize_game_and_state",
-      [](const std::string& data) {
+      [](std::string_view data) {
         auto rv = open_spiel::DeserializeGameAndState(data);
         return std::make_pair(rv.first, std::move(rv.second));
       },
@@ -618,7 +618,7 @@ PYBIND11_MODULE(pyspiel, m) {
   // Set an error handler that will raise exceptions. These exceptions are for
   // the Python interface only. When used from C++, OpenSpiel will never raise
   // exceptions - the process will be terminated instead.
-  open_spiel::SetErrorHandler([](const std::string& string) {
+  open_spiel::SetErrorHandler([](std::string_view string) {
     if (absl::GetFlag(FLAGS_log_exceptions_to_stderr)) {
       std::cerr << "OpenSpiel exception: " << string << std::endl << std::flush;
     }

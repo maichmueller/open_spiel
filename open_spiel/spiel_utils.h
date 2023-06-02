@@ -166,7 +166,7 @@ int PreviousPlayerRoundRobin(Player player, int nplayers);
 // 3 and filename is my.txt, it will look for ./my.txt, ../my.txt, ../../my.txt,
 // and ../../../my.txt, return the first file found or absl::nullopt if not
 // found.
-absl::optional<std::string> FindFile(const std::string& filename, int levels);
+absl::optional<std::string> FindFile(std::string_view filename, int levels);
 
 // Normalizes the span.
 void Normalize(absl::Span<double> weights);
@@ -182,8 +182,8 @@ std::string BoolToStr(bool b);
 // Converts a vector of pairs to a string.
 template <class A, class B>
 std::string VectorOfPairsToString(const std::vector<std::pair<A, B>>& vec,
-                                  const std::string& delimiter,
-                                  const std::string& pair_delimiter);
+                                  std::string_view delimiter,
+                                  std::string_view pair_delimiter);
 
 // Returns whether the absolute difference between floating point values a and
 // b is less than or equal to FloatingPointThresholdRatio() * max(|a|, |b|).
@@ -287,7 +287,7 @@ bool AllNear(const std::vector<T>& vector1, const std::vector<T>& vector2,
       __FILE__, ":", __LINE__, " CHECK_TRUE(", #x, ")"))
 
 // A verbose checker that will print state info:
-// Use as SPIEL_CHECK_TRUE_WSI(bool cond, const std::string& error_message,
+// Use as SPIEL_CHECK_TRUE_WSI(bool cond, std::string_view error_message,
 //                             const Game& game_ref, const State& state_ref)
 #define SPIEL_CHECK_TRUE_WSI(x, e, g, s)                         \
   while (!(x))                                                   \
@@ -351,10 +351,10 @@ bool AllNear(const std::vector<T>& vector1, const std::vector<T>& vector2,
 // RuntimeException to the caller, containing the error message.
 
 // Report a runtime error.
-[[noreturn]] void SpielFatalError(const std::string& error_msg);
+[[noreturn]] void SpielFatalError(std::string_view error_msg);
 
 // Specify a new error handler.
-using ErrorHandler = void (*)(const std::string&);
+using ErrorHandler = void (*)(std::string_view);
 void SetErrorHandler(ErrorHandler error_handler);
 
 // A ProbabilitySampler that samples uniformly from a distribution.

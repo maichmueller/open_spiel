@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
   // Print out registered games.
   std::cerr << "Registered games:" << std::endl;
   std::vector<std::string> names = open_spiel::RegisteredGames();
-  for (const std::string& name : names) {
+  for (std::string_view name : names) {
     std::cerr << name << std::endl;
   }
 
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
   // Add any specified parameters to override the defaults.
   open_spiel::GameParameters params;
   if (players > 0) {
-    params["players"] = open_spiel::GameParameter(players);
+    params["players"] = open_spiel::MakeGameParameter(players);
   }
   std::shared_ptr<const open_spiel::Game> game =
       open_spiel::LoadGame(game_name, params);

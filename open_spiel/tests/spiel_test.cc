@@ -46,7 +46,7 @@ void KuhnTests() {
   // More than two players.
   for (Player players = 3; players <= 5; players++) {
     RandomSimTest(
-        *LoadGame("kuhn_poker", {{"players", GameParameter(players)}}),
+        *LoadGame("kuhn_poker", {{"players", MakeGameParameter(players)}}),
         /*num_sims=*/100);
   }
 }
@@ -242,24 +242,24 @@ void GameParametersTest() {
 
   // -- Quirks
   // TODO: find a way to test the failures. These four fail (on purpose).
-  // GameParameterFromString("+");
-  // GameParameterFromString("---");
-  // GameParameterFromString(".");
-  // GameParameterFromString("...");
-  SPIEL_CHECK_TRUE(GameParameterFromString("1.2e-1").has_string_value());
+  // GameParameter::FromString("+");
+  // GameParameter::FromString("---");
+  // GameParameter::FromString(".");
+  // GameParameter::FromString("...");
+  SPIEL_CHECK_TRUE(GameParameter::FromString("1.2e-1").has_string_value());
 
   // -- Whitespace related
-  SPIEL_CHECK_TRUE(GameParameterFromString(" 1").has_string_value());
-  SPIEL_CHECK_TRUE(GameParameterFromString("1 ").has_string_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString(" 1").has_string_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString("1 ").has_string_value());
 
   // -- Intended behavior
-  SPIEL_CHECK_TRUE(GameParameterFromString("true").has_bool_value());
-  SPIEL_CHECK_TRUE(GameParameterFromString("True").has_bool_value());
-  SPIEL_CHECK_TRUE(GameParameterFromString("false").has_bool_value());
-  SPIEL_CHECK_TRUE(GameParameterFromString("False").has_bool_value());
-  SPIEL_CHECK_TRUE(GameParameterFromString("1").has_int_value());
-  SPIEL_CHECK_TRUE(GameParameterFromString("1.0").has_double_value());
-  SPIEL_CHECK_TRUE(GameParameterFromString("1. 0").has_string_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString("true").has_bool_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString("True").has_bool_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString("false").has_bool_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString("False").has_bool_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString("1").has_int_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString("1.0").has_double_value());
+  SPIEL_CHECK_TRUE(GameParameter::FromString("1. 0").has_string_value());
 
   // Tests for GameParametersFromString
   // Empty string
@@ -269,39 +269,39 @@ void GameParametersTest() {
   // Bare name
   params = GameParametersFromString("game_one");
   SPIEL_CHECK_EQ(params.size(), 1);
-  SPIEL_CHECK_EQ(params["name"].string_value(), "game_one");
+  SPIEL_CHECK_EQ(params["name"]->string_value(), "game_one");
 
   // Name with empty list
   params = GameParametersFromString("game_two()");
   SPIEL_CHECK_EQ(params.size(), 1);
-  SPIEL_CHECK_EQ(params["name"].string_value(), "game_two");
+  SPIEL_CHECK_EQ(params["name"]->string_value(), "game_two");
 
   // Single string parameter
   params = GameParametersFromString("game_three(foo=bar)");
   SPIEL_CHECK_EQ(params.size(), 2);
-  SPIEL_CHECK_EQ(params["name"].string_value(), "game_three");
-  SPIEL_CHECK_EQ(params["foo"].string_value(), "bar");
+  SPIEL_CHECK_EQ(params["name"]->string_value(), "game_three");
+  SPIEL_CHECK_EQ(params["foo"]->string_value(), "bar");
 
   // Every type of parameter
   params = GameParametersFromString(
       "game_four(str=strval,int=42,float=-1.2,game1=nested(),"
       "game2=nested2(param=val),bool1=True,bool2=False)");
   SPIEL_CHECK_EQ(params.size(), 8);
-  SPIEL_CHECK_EQ(params["name"].string_value(), "game_four");
-  SPIEL_CHECK_EQ(params["str"].string_value(), "strval");
-  SPIEL_CHECK_EQ(params["int"].int_value(), 42);
-  SPIEL_CHECK_EQ(params["float"].double_value(), -1.2);
-  SPIEL_CHECK_EQ(params["bool1"].bool_value(), true);
-  SPIEL_CHECK_EQ(params["bool2"].bool_value(), false);
+  SPIEL_CHECK_EQ(params["name"]->string_value(), "game_four");
+  SPIEL_CHECK_EQ(params["str"]->string_value(), "strval");
+  SPIEL_CHECK_EQ(params["int"]->int_value(), 42);
+  SPIEL_CHECK_EQ(params["float"]->double_value(), -1.2);
+  SPIEL_CHECK_EQ(params["bool1"]->bool_value(), true);
+  SPIEL_CHECK_EQ(params["bool2"]->bool_value(), false);
 
-  auto game1 = params["game1"].game_value();
+  auto game1 = params["game1"]->game_value();
   SPIEL_CHECK_EQ(game1.size(), 1);
-  SPIEL_CHECK_EQ(game1["name"].string_value(), "nested");
+  SPIEL_CHECK_EQ(game1["name"]->string_value(), "nested");
 
-  auto game2 = params["game2"].game_value();
+  auto game2 = params["game2"]->game_value();
   SPIEL_CHECK_EQ(game2.size(), 2);
-  SPIEL_CHECK_EQ(game2["name"].string_value(), "nested2");
-  SPIEL_CHECK_EQ(game2["param"].string_value(), "val");
+  SPIEL_CHECK_EQ(game2["name"]->string_value(), "nested2");
+  SPIEL_CHECK_EQ(game2["param"]->string_value(), "val");
 }
 
 void PolicySerializationTest() {

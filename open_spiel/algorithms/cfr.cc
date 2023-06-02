@@ -84,8 +84,7 @@ ActionsAndProbs CFRAveragePolicy::GetStatePolicy(
   return actions_and_probs;
 }
 
-ActionsAndProbs CFRAveragePolicy::GetStatePolicy(
-    const std::string& info_state) const {
+ActionsAndProbs CFRAveragePolicy::GetStatePolicy(std::string_view info_state) const {
   auto entry = info_states_.find(info_state);
   if (entry == info_states_.end()) {
     if (default_policy_) {
@@ -153,8 +152,7 @@ ActionsAndProbs CFRCurrentPolicy::GetStatePolicy(
                                                   actions_and_probs);
 }
 
-ActionsAndProbs CFRCurrentPolicy::GetStatePolicy(
-    const std::string& info_state) const {
+ActionsAndProbs CFRCurrentPolicy::GetStatePolicy(std::string_view info_state) const {
   auto entry = info_states_.find(info_state);
   if (entry == info_states_.end()) {
     if (default_policy_) {
@@ -409,7 +407,7 @@ std::vector<double> CFRSolverBase::ComputeCounterFactualRegret(
 void CFRSolverBase::GetInfoStatePolicyFromPolicy(
     std::vector<double>* info_state_policy,
     const std::vector<Action>& legal_actions, const Policy* policy,
-    const std::string& info_state) const {
+    std::string_view info_state) const {
   ActionsAndProbs actions_and_probs = policy->GetStatePolicy(info_state);
   info_state_policy->reserve(legal_actions.size());
 
@@ -478,7 +476,7 @@ bool CFRSolverBase::AllPlayersHaveZeroReachProb(
 }
 
 std::vector<double> CFRSolverBase::GetPolicy(
-    const std::string& info_state, const std::vector<Action>& legal_actions) {
+    std::string_view info_state, const std::vector<Action>& legal_actions) {
   auto entry = info_states_.find(info_state);
   if (entry == info_states_.end()) {
     info_states_[info_state] = CFRInfoStateValues(legal_actions);
@@ -661,7 +659,7 @@ void SerializeCFRInfoStateValuesTable(
 
 void DeserializeCFRInfoStateValuesTable(absl::string_view serialized,
                                         CFRInfoStateValuesTable* result,
-                                        std::string delimiter) {
+                                        std::string_view delimiter) {
   if (serialized.empty()) return;
 
   std::vector<absl::string_view> splits = absl::StrSplit(serialized, delimiter);
@@ -695,8 +693,8 @@ void CFRSolverBase::ApplyRegretMatching() {
   }
 }
 
-std::unique_ptr<CFRSolver> DeserializeCFRSolver(const std::string& serialized,
-                                                std::string delimiter) {
+std::unique_ptr<CFRSolver> DeserializeCFRSolver(std::string_view serialized,
+                                                std::string_view delimiter) {
   auto partial = PartiallyDeserializeCFRSolver(serialized);
   SPIEL_CHECK_EQ(partial.solver_type, "CFRSolver");
   auto solver = std::make_unique<CFRSolver>(
@@ -707,8 +705,8 @@ std::unique_ptr<CFRSolver> DeserializeCFRSolver(const std::string& serialized,
   return solver;
 }
 
-std::unique_ptr<CFRPlusSolver> DeserializeCFRPlusSolver(
-    const std::string& serialized, std::string delimiter) {
+std::unique_ptr<CFRPlusSolver> DeserializeCFRPlusSolver(std::string_view serialized,
+                         std::string_view delimiter) {
   auto partial = PartiallyDeserializeCFRSolver(serialized);
   SPIEL_CHECK_EQ(partial.solver_type, "CFRPlusSolver");
   auto solver = std::make_unique<CFRPlusSolver>(
@@ -719,8 +717,7 @@ std::unique_ptr<CFRPlusSolver> DeserializeCFRPlusSolver(
   return solver;
 }
 
-PartiallyDeserializedCFRSolver PartiallyDeserializeCFRSolver(
-    const std::string& serialized) {
+PartiallyDeserializedCFRSolver PartiallyDeserializeCFRSolver(std::string_view serialized) {
   // We don't copy the CFR values table section due to potential large size.
   enum Section {
     kInvalid = -1,

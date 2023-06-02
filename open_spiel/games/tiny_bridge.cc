@@ -81,7 +81,7 @@ Seat CharToSeat(char c) {
   SpielFatalError(absl::StrCat("Unknown hand '", std::string(1, c), "'"));
 }
 
-int StringToCard(const std::string& s) {
+int StringToCard(std::string_view s) {
   return CharToRank(s[1]) + kNumRanks * CharToTrumps(s[0]);
 }
 
@@ -170,7 +170,7 @@ const GameType kGameType2p{
     /*parameter_specification=*/
     {
         {"abstracted",
-         GameParameter(GameParameter::Type::kBool, /*is_mandatory=*/false)},
+         MakeGameParameter(GameParameter::Type::kBool, /*is_mandatory=*/false)},
     }};
 
 const GameType kGameType4p{
@@ -209,17 +209,17 @@ const GameType kGameTypePlay{
     /*parameter_specification=*/
     {
         {"trumps",
-         GameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
+         MakeGameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
         {"leader",
-         GameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
+         MakeGameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
         {"hand_W",
-         GameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
+         MakeGameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
         {"hand_N",
-         GameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
+         MakeGameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
         {"hand_E",
-         GameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
+         MakeGameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
         {"hand_S",
-         GameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
+         MakeGameParameter(GameParameter::Type::kString, /*is_mandatory=*/true)},
     }};
 
 std::shared_ptr<const Game> Factory2p(const GameParameters& params) {

@@ -417,12 +417,12 @@ const GameType kGameType{
     /*provides_observation_string=*/true,
     /*provides_observation_tensor=*/true,
     /*parameter_specification=*/
-    {{"obs_show_ids", GameParameter(kDefaultObsShowIDs)},
-     {"magic_wall_steps", GameParameter(kDefaultMagicWallSteps)},
-     {"blob_chance", GameParameter(kDefaultBlobChance)},
-     {"blob_max_percentage", GameParameter(kDefaultBlobMaxPercentage)},
-     {"rng_seed", GameParameter(0)},
-     {"grid", GameParameter(std::string(kDefaultGrid))}}};
+    {{"obs_show_ids", MakeGameParameter(kDefaultObsShowIDs)},
+     {"magic_wall_steps", MakeGameParameter(kDefaultMagicWallSteps)},
+     {"blob_chance", MakeGameParameter(kDefaultBlobChance)},
+     {"blob_max_percentage", MakeGameParameter(kDefaultBlobMaxPercentage)},
+     {"rng_seed", MakeGameParameter(0)},
+     {"grid", MakeGameParameter(std::string(kDefaultGrid))}}};
 
 std::shared_ptr<const Game> Factory(const GameParameters &params) {
   return std::shared_ptr<const Game>(new StonesNGemsGame(params));
@@ -1187,8 +1187,8 @@ StonesNGemsState::StonesNGemsState(
 
 // ------ Game -------
 
-std::unique_ptr<State> StonesNGemsGame::DeserializeState(
-    const std::string &str) const {
+std::unique_ptr<State>
+StonesNGemsGame::DeserializeState(std::string_view str) const {
   // empty string
   if (str.empty()) {
     return NewInitialState();
@@ -1267,9 +1267,9 @@ std::string StonesNGemsGame::GetRNGState() const {
   return rng_stream.str();
 }
 
-void StonesNGemsGame::SetRNGState(const std::string &rng_state) const {
+void StonesNGemsGame::SetRNGState(std::string_view rng_state) const {
   if (rng_state.empty()) return;
-  std::istringstream rng_stream(rng_state);
+  std::istringstream rng_stream(std::string{rng_state});
   rng_stream >> rng_;
 }
 
@@ -1318,7 +1318,7 @@ std::vector<int> StonesNGemsGame::ObservationTensorShape() const {
   return {kNumVisibleCellType, grid_.num_rows, grid_.num_cols};
 }
 
-Grid StonesNGemsGame::ParseGrid(const std::string &grid_string,
+Grid StonesNGemsGame::ParseGrid(std::string_view grid_string,
                                 double blob_max_percentage) {
   Grid grid;
 

@@ -54,8 +54,8 @@ const GameType kGameType{/*short_name=*/"breakthrough",
                          /*provides_observation_string=*/true,
                          /*provides_observation_tensor=*/true,
                          /*parameter_specification=*/
-                         {{"rows", GameParameter(kDefaultRows)},
-                          {"columns", GameParameter(kDefaultColumns)}}};
+                         {{"rows", MakeGameParameter(kDefaultRows)},
+                          {"columns", MakeGameParameter(kDefaultColumns)}}};
 
 std::shared_ptr<const Game> Factory(const GameParameters& params) {
   return std::shared_ptr<const Game>(new BreakthroughGame(params));
@@ -400,7 +400,7 @@ std::string BreakthroughState::Serialize() const {
 }
 
 std::unique_ptr<State> BreakthroughGame::DeserializeState(
-    const std::string& str) const {
+    std::string_view str) const {
   std::unique_ptr<State> state = NewInitialState();
 
   if (str.length() != rows_ * cols_) {

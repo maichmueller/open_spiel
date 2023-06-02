@@ -30,7 +30,7 @@ using internal::kUndefinedNodeId;
 
 InfostateNode::InfostateNode(const InfostateTree& tree, InfostateNode* parent,
                              int incoming_index, InfostateNodeType type,
-                             const std::string& infostate_string,
+                             std::string infostate_string,
                              double terminal_utility,
                              double terminal_ch_reach_prob, size_t depth,
                              std::vector<Action> legal_actions,
@@ -39,7 +39,7 @@ InfostateNode::InfostateNode(const InfostateTree& tree, InfostateNode* parent,
       parent_(parent),
       incoming_index_(incoming_index),
       type_(type),
-      infostate_string_(infostate_string),
+      infostate_string_(std::move(infostate_string)),
       terminal_utility_(terminal_utility),
       terminal_chn_reach_prob_(terminal_ch_reach_prob),
       depth_(depth),
@@ -216,7 +216,7 @@ std::ostream& operator<<(std::ostream& os, const InfostateTree& tree) {
 
 std::unique_ptr<InfostateNode> InfostateTree::MakeNode(
     InfostateNode* parent, InfostateNodeType type,
-    const std::string& infostate_string, double terminal_utility,
+    std::string_view infostate_string, double terminal_utility,
     double terminal_ch_reach_prob, size_t depth,
     const State* originating_state) {
   auto legal_actions =
@@ -228,11 +228,11 @@ std::unique_ptr<InfostateNode> InfostateTree::MakeNode(
                               : std::vector<Action>();
   // Instantiate node using new to make sure that we can call
   // the private constructor.
-  auto node = new InfostateNode(
-      *this, parent, parent->num_children(), type, infostate_string,
-      terminal_utility, terminal_ch_reach_prob, depth, std::move(legal_actions),
-      std::move(terminal_history));
-  return std::unique_ptr<InfostateNode>{node};
+  auto node = std::unique_ptr<InfostateNode>(new InfostateNode(
+      *this, parent, parent->num_children(), type,
+      std::string{infostate_string}, terminal_utility, terminal_ch_reach_prob,
+      depth, std::move(legal_actions), std::move(terminal_history)));
+  return node;
 }
 
 std::unique_ptr<InfostateNode> InfostateTree::MakeRootNode() const {
@@ -751,7 +751,7 @@ double InfostateTree::BestResponseValue(LeafVector<double> gradient) const {
 }
 
 DecisionId InfostateTree::DecisionIdFromInfostateString(
-    const std::string& infostate_string) const {
+    std::string_view infostate_string) const {
   for (InfostateNode* node : decision_infostates_) {
     if (node->infostate_string() == infostate_string)
       return node->decision_id();

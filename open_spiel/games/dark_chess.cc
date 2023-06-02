@@ -44,8 +44,8 @@ const GameType kGameType{
     /*provides_observation_string=*/true,
     /*provides_observation_tensor=*/true,
     /*parameter_specification=*/
-    {{"board_size", GameParameter(8)},
-     {"fen", GameParameter(GameParameter::Type::kString, false)}}};
+    {{"board_size", MakeGameParameter(8)},
+     {"fen", MakeGameParameter(GameParameter::Type::kString, false)}}};
 
 std::shared_ptr<const Game> Factory(const GameParameters& params) {
   return std::shared_ptr<const Game>(new DarkChessGame(params));
@@ -446,8 +446,8 @@ class DarkChessObserver : public Observer {
 };
 
 DarkChessState::DarkChessState(std::shared_ptr<const Game> game, int board_size,
-                               const std::string& fen)
-    : State(game),
+                               std::string_view fen)
+    : State(std::move(game)),
       start_board_(*chess::ChessBoard::BoardFromFEN(fen, board_size, true)),
       current_board_(start_board_) {
   SPIEL_CHECK_TRUE(&current_board_);

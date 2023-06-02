@@ -66,7 +66,7 @@ void TestRepetitionDraw() {
 }
 
 // Helper function. Get the named tensor.
-SpanTensor GetSpanTensor(Observation& obs, const std::string& name) {
+SpanTensor GetSpanTensor(Observation& obs, std::string_view name) {
   for (SpanTensor span_tensor : obs.tensors()) {
     if (span_tensor.info().name() == name) return span_tensor;
   }
@@ -180,7 +180,7 @@ void TestPawnBreachingMoveTwoSquares() {
 
 void BasicRbcTests(int board_size) {
   GameParameters params;
-  params["board_size"] = GameParameter(board_size);
+  params["board_size"] = MakeGameParameter(board_size);
 
   testing::LoadGameTest("rbc");
   testing::NoChanceOutcomesTest(*LoadGame("rbc", params));

@@ -22,8 +22,10 @@
 #include <vector>
 
 #include "open_spiel/abseil-cpp/absl/random/distributions.h"
+#include "open_spiel/abseil-cpp/absl/container/node_hash_map.h"
 #include "open_spiel/abseil-cpp/absl/strings/string_view.h"
 #include "open_spiel/abseil-cpp/absl/types/optional.h"
+#include "open_spiel/utils/heterogenous_lookup.h"
 #include "open_spiel/policy.h"
 #include "open_spiel/spiel.h"
 
@@ -99,9 +101,13 @@ struct CFRInfoStateValues {
 
 CFRInfoStateValues DeserializeCFRInfoStateValues(absl::string_view serialized);
 
-// A type for tables holding CFR values.
+// A type for tables holding CFR values. Allows heterogenous lookup
 using CFRInfoStateValuesTable =
-    std::unordered_map<std::string, CFRInfoStateValues>;
+    ::absl::node_hash_map<
+        std::string,
+        CFRInfoStateValues,
+        internal::StringHasher,
+        internal::StringEq>;
 
 // The result parameter is passed by pointer in order to avoid copying/moving
 // the string once the table is fully serialized (CFRInfoStateValuesTable
@@ -116,7 +122,7 @@ void SerializeCFRInfoStateValuesTable(
 // avoid copying/moving the table once fully deserialized.
 void DeserializeCFRInfoStateValuesTable(absl::string_view serialized,
                                         CFRInfoStateValuesTable* result,
-                                        std::string delimiter = "<~>");
+                                        std::string_view delimiter = "<~>");
 
 // A policy that extracts the average policy from the CFR table values, which
 // can be passed to tabular exploitability.
@@ -134,7 +140,7 @@ class CFRAveragePolicy : public Policy {
   };
   ActionsAndProbs GetStatePolicy(const State& state,
                                  Player player) const override;
-  ActionsAndProbs GetStatePolicy(const std::string& info_state) const override;
+  ActionsAndProbs GetStatePolicy(std::string_view info_state) const override;
   TabularPolicy AsTabular() const;
 
  private:
@@ -159,7 +165,7 @@ class CFRCurrentPolicy : public Policy {
   };
   ActionsAndProbs GetStatePolicy(const State& state,
                                  Player player) const override;
-  ActionsAndProbs GetStatePolicy(const std::string& info_state) const override;
+  ActionsAndProbs GetStatePolicy(std::string_view info_state) const override;
   TabularPolicy AsTabular() const;
 
  private:
@@ -273,16 +279,16 @@ class CFRSolverBase {
   void GetInfoStatePolicyFromPolicy(std::vector<double>* info_state_policy,
                                     const std::vector<Action>& legal_actions,
                                     const Policy* policy,
-                                    const std::string& info_state) const;
+                                    std::string_view info_state) const;
 
   // Get the policy at this information state. The probabilities are ordered in
   // the same order as legal_actions.
-  std::vector<double> GetPolicy(const std::string& info_state,
+  std::vector<double> GetPolicy(std::string_view info_state,
                                 const std::vector<Action>& legal_actions);
 
   void ApplyRegretMatchingPlusReset();
 
-  std::vector<double> RegretMatching(const std::string& info_state,
+  std::vector<double> RegretMatching(std::string_view info_state,
                                      const std::vector<Action>& legal_actions);
 
   bool AllPlayersHaveZeroReachProb(
@@ -322,8 +328,8 @@ class CFRSolver : public CFRSolverBase {
   std::string SerializeThisType() const { return "CFRSolver"; }
 };
 
-std::unique_ptr<CFRSolver> DeserializeCFRSolver(const std::string& serialized,
-                                                std::string delimiter = "<~>");
+std::unique_ptr<CFRSolver> DeserializeCFRSolver(std::string_view serialized,
+                     std::string_view delimiter = "<~>");
 
 // CFR+ implementation.
 //
@@ -351,8 +357,8 @@ class CFRPlusSolver : public CFRSolverBase {
   std::string SerializeThisType() const { return "CFRPlusSolver"; }
 };
 
-std::unique_ptr<CFRPlusSolver> DeserializeCFRPlusSolver(
-    const std::string& serialized, std::string delimiter = "<~>");
+std::unique_ptr<CFRPlusSolver> DeserializeCFRPlusSolver(std::string_view serialized,
+                         std::string_view delimiter = "<~>");
 
 struct PartiallyDeserializedCFRSolver {
   PartiallyDeserializedCFRSolver(std::shared_ptr<const Game> game,
@@ -369,8 +375,7 @@ struct PartiallyDeserializedCFRSolver {
   absl::string_view serialized_cfr_values_table;
 };
 
-PartiallyDeserializedCFRSolver PartiallyDeserializeCFRSolver(
-    const std::string& serialized);
+PartiallyDeserializedCFRSolver PartiallyDeserializeCFRSolver(std::string_view serialized);
 
 }  // namespace algorithms
 }  // namespace open_spiel

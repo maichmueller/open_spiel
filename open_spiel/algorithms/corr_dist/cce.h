@@ -15,6 +15,7 @@
 #ifndef OPEN_SPIEL_ALGORITHMS_CORR_DIST_CCE_H_
 #define OPEN_SPIEL_ALGORITHMS_CORR_DIST_CCE_H_
 
+#include <utility>
 #include <vector>
 
 #include "open_spiel/abseil-cpp/absl/types/optional.h"
@@ -63,10 +64,10 @@ class CCEState : public WrappedState {
 
 class CCEGame : public WrappedGame {
  public:
-  CCEGame(std::shared_ptr<const Game> game, CorrDistConfig config,
+  CCEGame(const std::shared_ptr<const Game>& game, CorrDistConfig config,
           const CorrelationDevice& mu)
       : WrappedGame(game, game->GetType(), game->GetParameters()),
-        config_(config),
+        config_(std::move(config)),
         mu_(mu),
         orig_num_distinct_actions_(game->NumDistinctActions()) {}
 
@@ -89,8 +90,8 @@ class CCETabularPolicy : public TabularPolicy {
  public:
   CCETabularPolicy() {}
 
-  ActionsAndProbs GetStatePolicy(const std::string& info_state) const override {
-    SpielFatalError("GetStatePolicy(const std::string&) should not be called.");
+  ActionsAndProbs GetStatePolicy(std::string_view info_state) const override {
+    SpielFatalError("GetStatePolicy(std::string_view) should not be called.");
     return TabularPolicy::GetStatePolicy(info_state);
   }
   ActionsAndProbs GetStatePolicy(const State& state, Player pl) const override {

@@ -45,11 +45,11 @@ const GameType kGameType{
     /*provides_observation_string=*/true,
     /*provides_observation_tensor=*/true,
     {{"game",
-      GameParameter(GameParameter::Type::kGame, /*is_mandatory=*/true)}},
+      MakeGameParameter(GameParameter::Type::kGame, /*is_mandatory=*/true)}},
     /*default_loadable=*/false};
 
 std::shared_ptr<const Game> Factory(const GameParameters& params) {
-  return ConvertToTurnBased(*LoadGame(params.at("game").game_value()));
+  return ConvertToTurnBased(*LoadGame(params.at("game")->game_value()));
 }
 
 REGISTER_SPIEL_GAME(kGameType, Factory);
@@ -267,8 +267,8 @@ GameType ConvertType(GameType type) {
 }
 
 GameParameters ConvertParams(const GameType& type, GameParameters params) {
-  params["name"] = GameParameter(type.short_name);
-  GameParameters new_params{{"game", GameParameter{params}}};
+  params["name"] = MakeGameParameter(type.short_name);
+  GameParameters new_params{{"game", MakeGameParameter(params)}};
   return new_params;
 }
 }  // namespace
@@ -285,7 +285,7 @@ std::shared_ptr<const Game> ConvertToTurnBased(const Game& game) {
       new TurnBasedSimultaneousGame(game.shared_from_this()));
 }
 
-std::shared_ptr<const Game> LoadGameAsTurnBased(const std::string& name) {
+std::shared_ptr<const Game> LoadGameAsTurnBased(std::string_view name) {
   auto game = LoadGame(name);
   if (game->GetType().dynamics == GameType::Dynamics::kSimultaneous) {
     return ConvertToTurnBased(*game);
@@ -294,7 +294,7 @@ std::shared_ptr<const Game> LoadGameAsTurnBased(const std::string& name) {
   }
 }
 
-std::shared_ptr<const Game> LoadGameAsTurnBased(const std::string& name,
+std::shared_ptr<const Game> LoadGameAsTurnBased(std::string_view name,
                                                 const GameParameters& params) {
   auto game = LoadGame(name, params);
   if (game->GetType().dynamics == GameType::Dynamics::kSimultaneous) {

@@ -49,10 +49,10 @@ const GameType kGameType{/*short_name=*/"bargaining",
                          /*provides_observation_string=*/true,
                          /*provides_observation_tensor=*/true,
                          /*parameter_specification=*/
-                         {{"instances_file", GameParameter("")},
-                          {"max_turns", GameParameter(kDefaultMaxTurns)},
-                          {"discount", GameParameter(kDefaultDiscount)},
-                          {"prob_end", GameParameter(kDefaultProbEnd)}}};
+                         {{"instances_file", MakeGameParameter("")},
+                          {"max_turns", MakeGameParameter(kDefaultMaxTurns)},
+                          {"discount", MakeGameParameter(kDefaultDiscount)},
+                          {"prob_end", MakeGameParameter(kDefaultProbEnd)}}};
 
 static std::shared_ptr<const Game> Factory(const GameParameters& params) {
   return std::shared_ptr<const Game>(new BargainingGame(params));
@@ -437,16 +437,16 @@ std::unique_ptr<State> BargainingState::Clone() const {
   return std::unique_ptr<State>(new BargainingState(*this));
 }
 
-void BargainingGame::ParseInstancesFile(const std::string& filename) {
-  open_spiel::file::File infile(filename, "r");
+void BargainingGame::ParseInstancesFile(std::string_view filename) {
+  open_spiel::file::File infile(std::string{filename}, "r");
   std::string contents = infile.ReadContents();
   ParseInstancesString(contents);
 }
 
-void BargainingGame::ParseInstancesString(const std::string& instances_string) {
+void BargainingGame::ParseInstancesString(std::string_view instances_string) {
   std::vector<std::string> lines = absl::StrSplit(instances_string, '\n');
   SPIEL_CHECK_GT(lines.size(), 1);
-  for (const std::string& line : lines) {
+  for (std::string_view line : lines) {
     if (!line.empty()) {
       std::vector<std::string> parts = absl::StrSplit(line, ' ');
       SPIEL_CHECK_EQ(parts.size(), kNumItemTypes);

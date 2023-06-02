@@ -51,12 +51,12 @@ const GameType kGameType{/*short_name=*/"nfg_game",
                          /*provides_observation_string=*/true,
                          /*provides_observation_tensor=*/false,
                          /*parameter_specification=*/
-                         {{"filename", GameParameter(std::string(""))}},
+                         {{"filename", MakeGameParameter(std::string(""))}},
                          /*default_loadable=*/false};
 
 class NFGGameParser {
  public:
-  explicit NFGGameParser(const std::string& data)
+  explicit NFGGameParser(std::string_view data)
       : string_data_(data), pos_(0) {}
 
   shared_ptr<const Game> ParseGame() {
@@ -197,7 +197,7 @@ class NFGGameParser {
     SPIEL_CHECK_EQ(pos_, string_data_.length());
   }
 
-  bool ParseDoubleValue(const std::string& str, double* value) const {
+  bool ParseDoubleValue(std::string_view str, double* value) const {
     if (str.find('/') != std::string::npos) {
       // Check for rational number of the form X/Y
       std::vector<std::string> parts = absl::StrSplit(str, '/');
@@ -268,7 +268,7 @@ class NFGGameParser {
     return str;
   }
 
-  const std::string& string_data_;
+  std::string_view string_data_;
   int pos_;
   int num_players_;
   std::string name_;
@@ -290,7 +290,7 @@ class NFGGameParser {
 
 std::shared_ptr<const Game> Factory(const GameParameters& params) {
   // return std::shared_ptr<const Game>(new EFGGame(params));
-  std::string filename = params.at("filename").string_value();
+  std::string filename = params.at("filename")->string_value();
   std::string string_data = file::ReadContentsFromFile(filename, "r");
 
   SPIEL_CHECK_GT(string_data.size(), 0);
@@ -303,7 +303,7 @@ REGISTER_SPIEL_GAME(kGameType, Factory);
 RegisterSingleTensorObserver single_tensor(kGameType.short_name);
 }  // namespace
 
-std::shared_ptr<const Game> LoadNFGGame(const std::string& data) {
+std::shared_ptr<const Game> LoadNFGGame(std::string_view data) {
   NFGGameParser parser(data);
   return parser.ParseGame();
 }

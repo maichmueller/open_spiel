@@ -62,11 +62,11 @@ const GameType kGameType{/*short_name=*/"bridge",
                          {
                              // If true, replace the play phase with a computed
                              // result based on perfect-information play.
-                             {"use_double_dummy_result", GameParameter(true)},
+                             {"use_double_dummy_result", MakeGameParameter(true)},
                              // If true, the dealer's side is vulnerable.
-                             {"dealer_vul", GameParameter(false)},
+                             {"dealer_vul", MakeGameParameter(false)},
                              // If true, the non-dealer's side is vulnerable.
-                             {"non_dealer_vul", GameParameter(false)},
+                             {"non_dealer_vul", MakeGameParameter(false)},
                          }};
 
 std::shared_ptr<const Game> Factory(const GameParameters& params) {
@@ -884,7 +884,7 @@ std::string BridgeState::Serialize() const {
 }
 
 std::unique_ptr<State> BridgeGame::DeserializeState(
-    const std::string& str) const {
+    std::string_view str) const {
   if (!UseDoubleDummyResult()) return Game::DeserializeState(str);
   auto state = absl::make_unique<BridgeState>(
       shared_from_this(), UseDoubleDummyResult(), IsDealerVulnerable(),

@@ -55,8 +55,8 @@ const GameType kGameType{/*short_name=*/"markov_soccer",
                          /*provides_observation_string=*/true,
                          /*provides_observation_tensor=*/true,
                          /*parameter_specification=*/
-                         {{"horizon", GameParameter(kDefaultHorizon)},
-                          {"grid", GameParameter(std::string(kDefaultGrid))}}};
+                         {{"horizon", MakeGameParameter(kDefaultHorizon)},
+                          {"grid", MakeGameParameter(std::string(kDefaultGrid))}}};
 
 std::shared_ptr<const Game> Factory(const GameParameters& params) {
   return std::shared_ptr<const Game>(new MarkovSoccerGame(params));
@@ -399,7 +399,7 @@ std::vector<int> MarkovSoccerGame::ObservationTensorShape() const {
 }
 
 namespace {
-Grid ParseGrid(const std::string& grid_string) {
+Grid ParseGrid(std::string_view grid_string) {
   Grid grid{/*num_rows=*/0, /*num_cols=*/0};
   int row = 0;
   int col = 0;

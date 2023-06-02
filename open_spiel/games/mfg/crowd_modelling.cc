@@ -47,8 +47,8 @@ const GameType kGameType{/*short_name=*/"mfg_crowd_modelling",
                          /*provides_observation_string=*/true,
                          /*provides_observation_tensor=*/true,
                          /*parameter_specification=*/
-                         {{"size", GameParameter(kDefaultSize)},
-                          {"horizon", GameParameter(kDefaultHorizon)}},
+                         {{"size", MakeGameParameter(kDefaultSize)},
+                          {"horizon", MakeGameParameter(kDefaultHorizon)}},
                          /*default_loadable*/true,
                          /*provides_factored_observation_string*/false};
 
@@ -240,8 +240,8 @@ std::vector<int> CrowdModellingGame::ObservationTensorShape() const {
   return {size_ + horizon_ + 1};
 }
 
-std::unique_ptr<State> CrowdModellingGame::DeserializeState(
-    const std::string& str) const {
+std::unique_ptr<State>
+CrowdModellingGame::DeserializeState(std::string_view str) const {
   std::vector<std::string> lines = absl::StrSplit(str, '\n');
   if (lines.size() != 2) {
     SpielFatalError(absl::StrCat("Expected 2 lines in serialized state, got: ",

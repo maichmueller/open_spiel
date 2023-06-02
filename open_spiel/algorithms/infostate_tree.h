@@ -376,7 +376,7 @@ class InfostateTree final : public std::enable_shared_from_this<InfostateTree> {
     return Range<DecisionId>(0, decision_infostates_.size(), this);
   }
   DecisionId DecisionIdFromInfostateString(
-      const std::string& infostate_string) const;
+      std::string_view infostate_string) const;
 
   // -- Leaf operations --------------------------------------------------------
   const std::vector<InfostateNode*>& leaf_nodes() const {
@@ -425,7 +425,7 @@ class InfostateTree final : public std::enable_shared_from_this<InfostateTree> {
   // Utility functions whenever we create a new node for the tree.
   std::unique_ptr<InfostateNode> MakeNode(InfostateNode* parent,
                                           InfostateNodeType type,
-                                          const std::string& infostate_string,
+                                          std::string_view infostate_string,
                                           double terminal_utility,
                                           double terminal_ch_reach_prob,
                                           size_t depth,
@@ -556,7 +556,7 @@ class InfostateNode final {
   // Only InfostateTree is allowed to construct nodes.
   InfostateNode(const InfostateTree& tree, InfostateNode* parent,
                 int incoming_index, InfostateNodeType type,
-                const std::string& infostate_string, double terminal_utility,
+                std::string  infostate_string, double terminal_utility,
                 double terminal_ch_reach_prob, size_t depth,
                 std::vector<Action> legal_actions,
                 std::vector<Action> terminal_history);

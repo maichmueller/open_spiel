@@ -52,10 +52,10 @@ const GameType kGameType{/*short_name=*/"colored_trails",
                          /*provides_observation_string=*/true,
                          /*provides_observation_tensor=*/true,
                          /*parameter_specification=*/
-                         {{"boards_file", GameParameter("")},
-                          {"board_size", GameParameter(kDefaultBoardSize)},
-                          {"num_colors", GameParameter(kDefaultNumColors)},
-                          {"players", GameParameter(kDefaultNumPlayers)}}};
+                         {{"boards_file", MakeGameParameter("")},
+                          {"board_size", MakeGameParameter(kDefaultBoardSize)},
+                          {"num_colors", MakeGameParameter(kDefaultNumColors)},
+                          {"players", MakeGameParameter(kDefaultNumPlayers)}}};
 
 static std::shared_ptr<const Game> Factory(const GameParameters& params) {
   return std::shared_ptr<const Game>(new ColoredTrailsGame(params));
@@ -202,7 +202,7 @@ std::string Board::PrettyBoardString() const {
   return str;
 }
 
-void Board::ParseFromLine(const std::string& line) {
+void Board::ParseFromLine(std::string_view line) {
   // Example: 4 5 3 AAEDCABCDAAABBEE AACCCD AAAC BBCEE 14 7 0 2
   std::vector<std::string> parts = absl::StrSplit(line, ' ');
   SPIEL_CHECK_EQ(parts.size(), 3 + 2 * num_players + 2);
