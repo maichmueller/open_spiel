@@ -717,7 +717,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
   mod.method(
       "exploitability",
       [](const open_spiel::Game& game,
-         const typename TabularPolicy::table_type& policy) {
+         const typename open_spiel::TabularPolicy::table_type& policy) {
         return open_spiel::algorithms::Exploitability(game, policy);
       });
   mod.method("nash_conv", [](const open_spiel::Game& game,
