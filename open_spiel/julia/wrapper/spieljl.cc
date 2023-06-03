@@ -717,8 +717,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
   mod.method(
       "exploitability",
       [](const open_spiel::Game& game,
-         const std::unordered_map<std::string, open_spiel::ActionsAndProbs>&
-             policy) {
+         const typename TabularPolicy::table_type& policy) {
         return open_spiel::algorithms::Exploitability(game, policy);
       });
   mod.method("nash_conv", [](const open_spiel::Game& game,
@@ -728,8 +727,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
   mod.method(
       "nash_conv",
       [](const open_spiel::Game& game,
-         const std::unordered_map<std::string, open_spiel::ActionsAndProbs>&
-             policy) {
+        const typename TabularPolicy::table_type& policy) {
         return open_spiel::algorithms::NashConv(game, policy);
       });
   mod.method("convert_to_turn_based", &open_spiel::ConvertToTurnBased);
