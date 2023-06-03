@@ -727,7 +727,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
   mod.method(
       "nash_conv",
       [](const open_spiel::Game& game,
-        const typename TabularPolicy::table_type& policy) {
+        const typename open_spiel::TabularPolicy::table_type& policy) {
         return open_spiel::algorithms::NashConv(game, policy);
       });
   mod.method("convert_to_turn_based", &open_spiel::ConvertToTurnBased);
