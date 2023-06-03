@@ -45,24 +45,24 @@ repos:
     hooks:
       - id: isort
 
-#  # Format Python code with black
+  # Format Python code with black
 #  black uses an uncompromisable 4-indent as the formatting basis of
 #  python files which clashes with google's pylint configuration.
 #  That's why we are using pyink instead which allows 2-indent.
-#  - repo: https://github.com/psf/black
-#    rev: 23.3.0
-#    hooks:
-#      - id: black
-#        language_version: python3
-#        types: [ python ]
-
-    # Format Python code with pyink
-  - repo: https://github.com/google/pyink
+  - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
-      - id: pyink
+      - id: black
         language_version: python3
-        types: [python]
+        types: [ python ]
+
+#    # Format Python code with pyink
+#  - repo: https://github.com/google/pyink
+#    rev: 23.3.0
+#    hooks:
+#      - id: pyink
+#        language_version: python3
+#        types: [python]
 
   # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
