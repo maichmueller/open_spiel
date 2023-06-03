@@ -659,7 +659,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
       .method(
           "set_policy",
           [](open_spiel::algorithms::TabularBestResponse& t,
-             std::unordered_map<std::string, open_spiel::ActionsAndProbs>& p) {
+             open_spiel::algorithms::TabularBestResponse::table_type& p) {
             return t.SetPolicy(p);
           });
 
