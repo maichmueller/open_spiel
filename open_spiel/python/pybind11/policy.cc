@@ -431,7 +431,8 @@ void init_pyspiel_policy(py::module& m) {
   m.def(
       "nash_conv",
       [](const std::shared_ptr<const Game>& game,
-         const std::unordered_map<std::string, ActionsAndProbs>& policy) {
+//        const std::unordered_map<std::string, ActionsAndProbs>& policy) {
+         const typename TabularPolicy::table_type & policy) {
         return NashConv(*game, policy);
       },
       "Calculates a measure of how far the given policy is from a Nash "
