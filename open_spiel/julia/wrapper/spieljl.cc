@@ -492,7 +492,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
          "TabularPolicy", jlcxx::julia_base_type<open_spiel::Policy>())
       .constructor<const open_spiel::Game&>()
       .constructor<
-          const std::unordered_map<std::string, open_spiel::ActionsAndProbs>&>()
+          const open_spiel::TabularPolicy::table_type&>()
       .method("get_state_policy", &open_spiel::TabularPolicy::GetStatePolicy)
       .method("policy_table",
               [](open_spiel::TabularPolicy p) { return p.PolicyTable(); })
@@ -501,7 +501,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
                 return p.GetStatePolicy(state.InformationStateString());
               })
       .method("get_state_policy",
-              [](open_spiel::TabularPolicy p, const std::string& state) {
+              [](open_spiel::TabularPolicy p, const std::string state) {
                 return p.GetStatePolicy(state);
               });
 
