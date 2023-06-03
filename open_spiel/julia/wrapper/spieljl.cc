@@ -16,6 +16,8 @@
 
 #include "jlcxx/jlcxx.hpp"
 #include "jlcxx/stl.hpp"
+#include "open_spiel/abseil-cpp/absl/container/node_hash_map.h"
+#include "open_spiel/abseil-cpp/absl/container/btree_map.h"
 #include "open_spiel/algorithms/best_response.h"
 #include "open_spiel/algorithms/cfr.h"
 #include "open_spiel/algorithms/cfr_br.h"
@@ -154,7 +156,18 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
              std::unordered_map<open_spiel::Action, double>,
              std::unordered_map<std::string, open_spiel::Action>,
              std::unordered_map<std::string, open_spiel::ActionsAndProbs>,
-             std::unordered_map<std::string, int>>([](auto wrapped) {
+             std::unordered_map<std::string, int>,
+             absl::btree_map<std::string, std::shared_ptr<open_spiel::GameParameter>,
+                                  open_spiel::internal::StringCmp>,
+             absl::node_hash_map<std::string, open_spiel::ActionsAndProbs,
+                                  open_spiel::internal::StringHasher,
+                                  open_spiel::internal::StringEq>,
+             absl::node_hash_map<std::string, open_spiel::Action,
+                                  open_spiel::internal::StringHasher,
+                                  open_spiel::internal::StringEq>,
+             absl::node_hash_map<std::string, int,
+                                  open_spiel::internal::StringHasher,
+                                  open_spiel::internal::StringEq>>([](auto wrapped) {
         typedef typename decltype(wrapped)::type WrappedT;
         typedef typename WrappedT::key_type WrappedKey;
         typedef typename WrappedT::mapped_type WrappedVal;
@@ -636,7 +649,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
                    const open_spiel::Policy*>()
       .constructor<
           const open_spiel::Game&, open_spiel::Player,
-          const std::unordered_map<std::string, open_spiel::ActionsAndProbs>&>()
+          const open_spiel::algorithms::TabularBestResponse::table_type &>()
       .method("best_response_action",
               [](open_spiel::algorithms::TabularBestResponse& t,
                  const std::string& infostate) {
