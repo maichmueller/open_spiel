@@ -401,7 +401,7 @@ void init_pyspiel_policy(py::module& m) {
   m.def(
       "exploitability",
       [](const std::shared_ptr<const Game>& game,
-         const std::unordered_map<std::string, ActionsAndProbs>& policy) {
+         const typename TabularPolicy::table_type& policy) {
         return Exploitability(*game, policy);
       },
       "Returns the sum of the utility that a best responder wins when when "
