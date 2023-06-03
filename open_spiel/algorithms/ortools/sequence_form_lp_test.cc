@@ -46,7 +46,7 @@ void TestGameValueAndExploitability(std::string_view game_name,
   if (game->GetType().dynamics == GameType::Dynamics::kSimultaneous) return;
 
   // Merge the two tables.
-  std::unordered_map<std::string, ActionsAndProbs> profile_table =
+  auto profile_table =
       policy0.PolicyTable();
   profile_table.insert(policy1.PolicyTable().begin(),
                        policy1.PolicyTable().end());
