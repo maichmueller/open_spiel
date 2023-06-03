@@ -31,6 +31,7 @@ using ::open_spiel::BotRegisterer;
 using ::open_spiel::Game;
 using ::open_spiel::GameParameter;
 using ::open_spiel::GameParameters;
+using ::open_spiel::MakeGameParameter;
 using ::open_spiel::SerializeGameParameters;
 using ::open_spiel::State;
 
@@ -76,18 +77,18 @@ void DeleteGameParameters(void* params_ptr) {
 
 void GameParametersSetInt(void* params_ptr, const char* key, int value) {
   GameParameters* params = reinterpret_cast<GameParameters*>(params_ptr);
-  params->insert_or_assign(std::string(key), GameParameter(value));
+  params->insert_or_assign(std::string(key), MakeGameParameter(value));
 }
 
 void GameParametersSetDouble(void* params_ptr, const char* key, double value) {
   GameParameters* params = reinterpret_cast<GameParameters*>(params_ptr);
-  params->insert_or_assign(std::string(key), GameParameter(value));
+  params->insert_or_assign(std::string(key), MakeGameParameter(value));
 }
 
 void GameParametersSetString(void* params_ptr, const char* key,
                              const char* value) {
   GameParameters* params = reinterpret_cast<GameParameters*>(params_ptr);
-  params->insert_or_assign(std::string(key), GameParameter(std::string(value)));
+  params->insert_or_assign(std::string(key), MakeGameParameter(std::string(value)));
 }
 
 char* GameParametersSerialize(const void* params_ptr,
