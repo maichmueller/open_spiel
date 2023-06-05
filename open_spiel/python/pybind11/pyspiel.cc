@@ -15,6 +15,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "open_spiel/pybind11_abseil/pybind11_abseil/absl_casters.h"
 #include "open_spiel/abseil-cpp/absl/flags/flag.h"
 #include "open_spiel/algorithms/matrix_game_utils.h"
 #include "open_spiel/algorithms/nfg_writer.h"
