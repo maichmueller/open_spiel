@@ -93,6 +93,8 @@ set(PYTHON_BINDINGS ${PYTHON_BINDINGS}
   pybind11/games_chess.h
   pybind11/games_colored_trails.cc
   pybind11/games_colored_trails.h
+  pybind11/games_dots_and_boxes.cc
+  pybind11/games_dots_and_boxes.h
   pybind11/games_euchre.cc
   pybind11/games_euchre.h
   pybind11/games_gin_rummy.cc
@@ -119,6 +121,8 @@ set(PYTHON_BINDINGS ${PYTHON_BINDINGS}
   pybind11/pyspiel.cc
   pybind11/python_games.cc
   pybind11/python_games.h
+  pybind11/python_policy.cc
+  pybind11/python_policy.h
   pybind11/utils.cc
   pybind11/utils.h
   )
@@ -225,6 +229,8 @@ set(PYTHON_TESTS ${PYTHON_TESTS}
   environments/catch_test.py
   environments/cliff_walking_test.py
   games/block_dominoes_test.py
+  games/chat_game_test.py
+  games/chat_games/envs/base_envs/base_envs_test.py
   games/data_test.py
   games/dynamic_routing_test.py
   games/dynamic_routing_utils_test.py
